@@ -1,5 +1,4 @@
 from gurobipy import Model, GRB
-
 # Función para leer la instancia desde un archivo .txt
 def leer_instancia(archivo):
     with open(archivo, 'r') as file:
@@ -16,7 +15,6 @@ def resolver_problema(archivo_instancia):
     print(f"\n\033[1;34mResolviendo instancia: {archivo_instancia}\033[0m")  # Título en azul
     # Leer datos desde la instancia
     ganancias, harina_requerida, horas_requeridas, max_unidades, recursos = leer_instancia(archivo_instancia)
-
     model = Model("Galletas")
 
     # Definir las variables
@@ -42,6 +40,21 @@ def resolver_problema(archivo_instancia):
     model.optimize()
 
     if model.status == GRB.OPTIMAL:
+        # Imprimir los costes reducidos de las variables
+        print("\n\033[1;32mCostes reducidos de las variables:\033[0m")
+        for var in model.getVars():
+            print(f"\033[1;32m{var.VarName}: {var.RC:.4f}\033[0m")
+
+        # Imprimir los valores sombra de las restricciones
+        print("\n\033[1;32mValores sombra de las restricciones:\033[0m")
+        for constr in model.getConstrs():
+            print(f"\033[1;32m{constr.ConstrName}: {constr.Pi:.4f}\033[0m")
+
+        # Imprimir las holguras de las restricciones
+        print("\n\033[1;32mHolguras de las restricciones:\033[0m")
+        for constr in model.getConstrs():
+            print(f"\033[1;32m{constr.ConstrName}: {constr.Slack:.4f}\033[0m")
+
         print("\n\033[1;32mResultados para la instancia " + archivo_instancia + ":\033[0m")  # Verde para los resultados
 
         # Imprimir los valores optimizados de las variables
