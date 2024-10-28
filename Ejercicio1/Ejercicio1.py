@@ -70,7 +70,7 @@ def resolver_problema(archivo_instancia):
 
 print("Seleccione que instancia desea resolver")
 print("1.- Instancia 1 (problema basico)")
-print("2.- Instancia 1 (instancia cambiable)")
+print("2.- Instancia 1 (segundo problema)")
 print("3.- Instancia 1.2 (cambio de uso de variables)")
 segundo = int(input())
 if (segundo == 1):
