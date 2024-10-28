@@ -67,6 +67,15 @@ def resolver_problema(archivo_instancia):
     else:
         print("\033[1;31mNo se encontró un resultado óptimo para la instancia\033[0m")
 
-# Resolver ambas instancias
-resolver_problema("instancia1.txt")
-resolver_problema("instancia2.txt")
+
+print("Seleccione que instancia desea resolver")
+print("1.- Instancia 1 (problema basico)")
+print("2.- Instancia 1 (instancia cambiable)")
+print("3.- Instancia 1.2 (cambio de uso de variables)")
+segundo = int(input())
+if (segundo == 1):
+    resolver_problema("instancia1.txt")
+elif (segundo == 2):
+    resolver_problema("instancia2.txt")
+else:
+    resolver_problema("instancia1.2.txt")
