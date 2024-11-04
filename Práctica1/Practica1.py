@@ -68,6 +68,15 @@ def resolver_problema(archivo_instancia):
             quicksum(x[i, j] for j in ciudades) == y[i],
             name=f"salida_{i}"
         )
+    # Restricion que asegura que se pase de un nodo a otro de manera secuencial
+    for i in ciudades:
+        for j in ciudades:
+            if i !=j and i!=1 and j!=1:
+                modelo.addConstr(
+                    u[i]-u[j]+n*x[i,j]<=(n-1),
+                    name="Restricion de flujo"
+                )
+
 
     # Optimizar el modelo
     modelo.optimize()
