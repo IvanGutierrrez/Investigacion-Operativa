@@ -71,9 +71,10 @@ def resolver_problema(archivo_instancia):
             name=f"salida_{i}"
         )
     # Restricion que asegura que se pase de un nodo a otro de manera secuencial
+
     for i in ciudades:
         for j in ciudades:
-            if i !=j and i!=1 and j!=1:
+            if i != j and i!=1 and j!=1:
                 modelo.addConstr(
                     u[i]-u[j]+n*x[i,j]<=(n-1),
                     name="Restricion de flujo"
@@ -85,6 +86,14 @@ def resolver_problema(archivo_instancia):
         name="beneficio_minimo"
     )
 
+    #Comprobación de que no se puede usar un arco que vaya de i hasta i
+    for i in ciudades:
+        for j in ciudades:
+            if i == j:
+                modelo.addConstr(
+                    x[i,j] == 0,
+                )
+
     # Optimizar el modelo
     modelo.optimize()
 
@@ -93,6 +102,11 @@ def resolver_problema(archivo_instancia):
         print(f"\nCoste mínimo del recorrido: {modelo.ObjVal}")
         ruta = []
         ciudad_actual = 1
+        for i in ciudades: #comprobar q la ciudad 1 esta en el recorrido
+            if y[i].X < 0.5:
+                ciudad_actual += 1
+            else:
+                break
         while True:
             ruta.append(ciudad_actual)
             siguiente_ciudad = None
@@ -100,10 +114,6 @@ def resolver_problema(archivo_instancia):
                 if j != ciudad_actual and x[ciudad_actual, j].X > 0.5:
                     siguiente_ciudad = j
                     break
-            # Agregar condición para romper si no se encuentra un siguiente
-            if siguiente_ciudad is None:
-                print("No se encontró una ciudad siguiente en el recorrido.")
-                break
             if siguiente_ciudad == 1:
                 ruta.append(1)
                 break
