@@ -48,7 +48,9 @@ def resolver_problema(archivo_instancia):
 
     # Establecer la función objetivo
     modelo.setObjective(
-        #FALTA POR DEFINIR
+        quicksum(c[i, j] * x[i, j] for i in ciudades for j in ciudades if i != j)
+        + quicksum(p[i - 1] * (1 - y[i]) for i in ciudades),  # Corregir el índice para p
+        GRB.MINIMIZE
     )
 
     # Restricción 10, asegura que si un nodo j es visitado
@@ -77,6 +79,11 @@ def resolver_problema(archivo_instancia):
                     name="Restricion de flujo"
                 )
 
+    # Restricción 15: asegúrate de que el beneficio total sea al menos W
+    modelo.addConstr(
+        quicksum(w[i - 1] * y[i] for i in ciudades) >= W,
+        name="beneficio_minimo"
+    )
 
     # Optimizar el modelo
     modelo.optimize()
@@ -93,6 +100,10 @@ def resolver_problema(archivo_instancia):
                 if j != ciudad_actual and x[ciudad_actual, j].X > 0.5:
                     siguiente_ciudad = j
                     break
+            # Agregar condición para romper si no se encuentra un siguiente
+            if siguiente_ciudad is None:
+                print("No se encontró una ciudad siguiente en el recorrido.")
+                break
             if siguiente_ciudad == 1:
                 ruta.append(1)
                 break
