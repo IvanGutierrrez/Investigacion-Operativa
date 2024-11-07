@@ -49,7 +49,7 @@ def resolver_problema(archivo_instancia):
     # Establecer la función objetivo
     modelo.setObjective(
         quicksum(c[i, j] * x[i, j] for i in ciudades for j in ciudades if i != j)
-        + quicksum(p[i - 1] * (1 - y[i]) for i in ciudades),  # Corregir el índice para p
+        + quicksum(p[i - 1] * (1 - y[i]) for i in ciudades),
         GRB.MINIMIZE
     )
 
