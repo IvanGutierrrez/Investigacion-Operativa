@@ -71,6 +71,10 @@ def resolver_problema(archivo_instancia):
             name=f"salida_{i}"
         )
     # Restricion que asegura que se pase de un nodo a otro de manera secuencial
+    for i in ciudades:
+        if i != 1:
+            modelo.addConstr(u[i] >= 2, name=f"u_min_{i}")
+            modelo.addConstr(u[i] <= n, name=f"u_max_{i}")
 
     for i in ciudades:
         for j in ciudades:
