@@ -45,13 +45,22 @@ def resolver_problema(archivo_instancia):
     u = modelo.addVars(ciudades, vtype=GRB.CONTINUOUS, lb=1, ub=n, name="u")
     #Variable de decisión: y[i] = 1 si i esta incluido en el recorrido.
     y = modelo.addVars(ciudades, vtype=GRB.BINARY, name="y")
+    #Variable semicontinua
+    z = modelo.addVars(ciudades, ciudades, vtype=GRB.SEMICONT, lb=10, name="z")
+
 
     # Establecer la función objetivo
     modelo.setObjective(
-        quicksum(c[i, j] * x[i, j] for i in ciudades for j in ciudades if i != j)
+        quicksum(z[i, j] * x[i, j] for i in ciudades for j in ciudades if i != j)
         + quicksum(p[i - 1] * (1 - y[i]) for i in ciudades),
         GRB.MINIMIZE
     )
+
+    #Restricción de variable semicontinua
+    for i in ciudades:
+        for j in ciudades:
+            if i != j:
+                modelo.addConstr(z[i, j] <= c[i, j] * x[i, j], name=f"relacion_z_{i}_{j}")
 
     # Restricción 10, asegura que si un nodo j es visitado
     # entonces debe haber al menos un nodo i desde el cual
@@ -61,6 +70,7 @@ def resolver_problema(archivo_instancia):
             quicksum(x[i, j] for i in ciudades) == y[j],
             name=f"entrada_{j}"
         )
+
     # Restricción 11, es complementaria a la anterior,
     # si un nodo i es visitado debe haber al menos un
     # nodo j al que se salga desde i a través del arco
@@ -70,15 +80,11 @@ def resolver_problema(archivo_instancia):
             quicksum(x[i, j] for j in ciudades) == y[i],
             name=f"salida_{i}"
         )
-    # Restricion que asegura que se pase de un nodo a otro de manera secuencial
-    for i in ciudades:
-        if i != 1:
-            modelo.addConstr(u[i] >= 2, name=f"u_min_{i}")
-            modelo.addConstr(u[i] <= n, name=f"u_max_{i}")
 
+    # Restricion 4: asegura que se pase de un nodo a otro de manera secuencial
     for i in ciudades:
         for j in ciudades:
-            if i != j and i!=1 and j!=1:
+            if j != 1:
                 modelo.addConstr(
                     u[i]-u[j]+n*x[i,j]<=(n-1),
                     name="Restricion de flujo"
@@ -90,13 +96,8 @@ def resolver_problema(archivo_instancia):
         name="beneficio_minimo"
     )
 
-    #Comprobación de que no se puede usar un arco que vaya de i hasta i
-    for i in ciudades:
-        for j in ciudades:
-            if i == j:
-                modelo.addConstr(
-                    x[i,j] == 0,
-                )
+    #Restriccion de Implicación:
+    modelo.addConstr(y[1] <= y[n], name="Implicación1_N")
 
     # Optimizar el modelo
     modelo.optimize()
