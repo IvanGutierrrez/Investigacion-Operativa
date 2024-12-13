@@ -92,37 +92,63 @@ if __name__ == '__main__':
         for n, pn in pn_dict.items():
             print(f"P_{n}: {pn:.4f}")
 
-def generar_llegadas_y_servicios(tasa_llegadas, tasa_servicios, n_eventos):
-    """
-    Genera tiempos de llegada y servicio para un sistema M/M/1.
+def simulate_fifo_queue(lambda_rate, mu_rate, num_customers):
+    # Generar tiempos entre llegadas y tiempos de servicio
+    inter_arrival_times = np.random.exponential(1 / lambda_rate, num_customers)
+    service_times = np.random.exponential(1 / mu_rate, num_customers)
 
-    Parámetros:
-    - tasa_llegadas: Tasa promedio de llegadas (λ).
-    - tasa_servicios: Tasa promedio de servicios (μ).
-    - n_eventos: Número de llegadas a simular.
+    # Inicializar variables
+    arrival_times = np.cumsum(inter_arrival_times)
+    service_start_times = np.zeros(num_customers)
+    service_end_times = np.zeros(num_customers)
+    wait_times = np.zeros(num_customers)
 
-    Retorna:
-    - tiempos_llegada: Lista de tiempos de llegada acumulados.
-    - tiempos_servicio: Lista de tiempos de servicio para cada llegada.
-    """
-    # Generar tiempos entre llegadas (exponencial con tasa λ)
-    tiempos_entre_llegadas = np.random.exponential(1 / tasa_llegadas, n_eventos)
-    tiempos_llegada = np.cumsum(tiempos_entre_llegadas)  # Acumular para tiempos de llegada
+    # Simulación del sistema de colas
+    for i in range(num_customers):
+        if i == 0:
+            service_start_times[i] = arrival_times[i]
+        else:
+            service_start_times[i] = max(arrival_times[i], service_end_times[i - 1])
+        wait_times[i] = service_start_times[i] - arrival_times[i]
+        service_end_times[i] = service_start_times[i] + service_times[i]
 
-    # Generar tiempos de servicio (exponencial con tasa μ)
-    tiempos_servicio = np.random.exponential(1 / tasa_servicios, n_eventos)
+    # Calcular tiempos en el sistema
+    system_times = service_end_times - arrival_times
 
-    return tiempos_llegada, tiempos_servicio
+    # Métricas
+    #average_wait = np.mean(wait_times)
+    #average_system_time = np.mean(system_times)
+    server_utilization = np.sum(service_times) / service_end_times[-1]
+
+    return wait_times, system_times, server_utilization
 
 
-# Parámetros del sistema
-lambda_llegadas = 5  # Tasa de llegadas (λ)
-mu_servicios = 6  # Tasa de servicio (μ)
-n_llegadas = 100  # Número de eventos a simular
+# Parámetros
+lambda_rate = 4  # clientes por hora
+mu_rate = 5      # clientes por hora
+num_customers = 10000
 
-# Generar tiempos de llegada y servicio
-llegadas, servicios = generar_llegadas_y_servicios(lambda_llegadas, mu_servicios, n_llegadas)
+# Ejecutar la simulación
+wait_times, system_times, utilization = simulate_fifo_queue(lambda_rate, mu_rate, num_customers)
 
-# Mostrar los primeros 10 resultados
-print("Tiempos de llegada (acumulados):", llegadas[:10])
-print("Tiempos de servicio:", servicios[:10])
+print(f"Tiempo de espera promedio en cola (FIFO): {np.mean(wait_times):.2f} horas")
+print(f"Tiempo promedio en el sistema (FIFO): {np.mean(system_times):.2f} horas")
+print(f"Utilización del servidor (FIFO): {utilization:.2%}")
+
+# Visualizar la distribución de tiempos de espera
+plt.figure(figsize=(10, 6))
+plt.hist(wait_times, bins=50, density=True, edgecolor='black', alpha=0.7)
+plt.title('Distribución de tiempos de espera en cola (FIFO)')
+plt.xlabel('Tiempo de espera (horas)')
+plt.ylabel('Densidad de probabilidad')
+plt.grid(True)
+plt.show()
+
+# Visualizar la distribución de tiempos en el sistema
+plt.figure(figsize=(10, 6))
+plt.hist(system_times, bins=50, density=True, edgecolor='black', alpha=0.7)
+plt.title('Distribución de tiempos en el sistema (FIFO)')
+plt.xlabel('Tiempo en el sistema (horas)')
+plt.ylabel('Densidad de probabilidad')
+plt.grid(True)
+plt.show()
