@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def mm1_model(lam, mu):
     rho = lam / mu
@@ -64,8 +65,8 @@ def mm1k_model(lam, mu, K):
 
 if __name__ == '__main__':
 
-    lam = 5  # tasa de llegada
-    mu = 7  # tasa de servicio
+    lam = 4  # tasa de llegada
+    mu = 5  # tasa de servicio
 
     print("Que modelo usar: 1. M/M/1     2. M/M/1/K")
 
