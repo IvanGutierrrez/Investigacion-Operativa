@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 def mm1_model(lam, mu):
     rho = lam / mu
@@ -124,8 +126,8 @@ def simulate_fifo_queue(lambda_rate, mu_rate, num_customers):
 
 
 # Parámetros
-lambda_rate = 4  # clientes por hora
-mu_rate = 5      # clientes por hora
+lambda_rate = 5  # clientes por hora
+mu_rate = 7     # clientes por hora
 num_customers = 10000
 
 # Ejecutar la simulación
