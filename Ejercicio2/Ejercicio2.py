@@ -1,8 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-###<<<<<<< HEAD
-###=======
-###>>>>>>> 887428d6503684a459129258fa81a0459a495480
 
 def mm1_model(lam, mu):
     rho = lam / mu
@@ -68,33 +65,39 @@ def mm1k_model(lam, mu, K):
 
 if __name__ == '__main__':
 
-    lam = 4  # tasa de llegada
-    mu = 5  # tasa de servicio
+    lambda_rate = 4  # tasa de llegada
+    mu_rate = 5  # tasa de servicio
+    num = 0 # para el bucle por si no introduce numero bien
 
-    print("Que modelo usar: 1. M/M/1     2. M/M/1/K")
+    while num == 0:
 
-    if (input() == 1):
-        resultado_mm1 = mm1_model(lam, mu)
-        print("Resultados M/M/1:")
-        for clave, valor in resultado_mm1.items():
-            print(f"{clave}: {valor:.4f}")
+        print("Que modelo usar: 1. M/M/1     2. M/M/1/K")
 
-    else:
-        K = 3
-        results_mm1k, pn_dict = mm1k_model(lam, mu, K)
+        if (input() == 1):
+            num = 1
+            resultado_mm1 = mm1_model(lambda_rate, mu_rate)
+            print("Resultados M/M/1:")
+            for clave, valor in resultado_mm1.items():
+                print(f"{clave}: {valor:.4f}")
 
-        print("\nResultados para el Modelo M/M/1/K:")
-        for key, value in results_mm1k.items():
-            if 'Tiempo' in key:
-                print(f"{key}: {value:.4f} horas ({value * 60:.2f} minutos)")
-            elif 'λe' in key:
-                print(f"{key}: {value:.4f} clientes/hora")
-            else:
-                print(f"{key}: {value:.4f}")
+        if (input() == 2):
+            num = 1
+            K = 10000
+            results_mm1k, pn_dict = mm1k_model(lambda_rate, mu_rate, K)
 
-        print("\nProbabilidades Pn (n = 0 a {0}):".format(K))
-        for n, pn in pn_dict.items():
-            print(f"P_{n}: {pn:.4f}")
+            print("\nResultados para el Modelo M/M/1/K:")
+            for key, value in results_mm1k.items():
+                if 'Tiempo' in key:
+                    print(f"{key}: {value:.4f} horas ({value * 60:.2f} minutos)")
+                elif 'λe' in key:
+                    print(f"{key}: {value:.4f} clientes/hora")
+                else:
+                    print(f"{key}: {value:.4f}")
+
+            print("\nProbabilidades Pn (n = 0 a {0}):".format(K))
+            for n, pn in pn_dict.items():
+               print(f"P_{n}: {pn:.4f}")
+
 
 def simulate_fifo_queue(lambda_rate, mu_rate, num_customers):
     # Generar tiempos entre llegadas y tiempos de servicio
@@ -102,10 +105,17 @@ def simulate_fifo_queue(lambda_rate, mu_rate, num_customers):
     service_times = np.random.exponential(1 / mu_rate, num_customers)
 
     # Inicializar variables
-    arrival_times = np.cumsum(inter_arrival_times)
-    service_start_times = np.zeros(num_customers)
-    service_end_times = np.zeros(num_customers)
-    wait_times = np.zeros(num_customers)
+    arrival_times = np.cumsum(inter_arrival_times) # array con tiempos acumulativos de tiempos de llegada
+
+    service_start_times = np.zeros(num_customers) # array de 0 para el inicio de tiempos de servicio
+    service_end_times = np.zeros(num_customers) # array de 0 para el fin de tiempos de servicio
+
+    people_queued = np.zeros(num_customers) # array de 0 para el numero de gente en cola
+    people_inSys = np.zeros(num_customers) # array de 0 para el numero de gente siendo atendida
+    peopleInQueue = list # guardar tiempos de fin de servicio para saber que gente esta dentro
+    peopleInShop = list
+
+    wait_times = np.zeros(num_customers) # array de 0 para los tiempos de espera de cada cliente
 
     # Simulación del sistema de colas
     for i in range(num_customers):
@@ -113,6 +123,7 @@ def simulate_fifo_queue(lambda_rate, mu_rate, num_customers):
             service_start_times[i] = arrival_times[i]
         else:
             service_start_times[i] = max(arrival_times[i], service_end_times[i - 1])
+
         wait_times[i] = service_start_times[i] - arrival_times[i]
         service_end_times[i] = service_start_times[i] + service_times[i]
 
@@ -128,8 +139,6 @@ def simulate_fifo_queue(lambda_rate, mu_rate, num_customers):
 
 
 # Parámetros
-lambda_rate = 5  # clientes por hora
-mu_rate = 7     # clientes por hora
 num_customers = 10000
 
 # Ejecutar la simulación
