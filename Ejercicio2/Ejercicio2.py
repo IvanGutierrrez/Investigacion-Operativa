@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-<<<<<<< HEAD
-
-=======
->>>>>>> 887428d6503684a459129258fa81a0459a495480
+###<<<<<<< HEAD
+###=======
+###>>>>>>> 887428d6503684a459129258fa81a0459a495480
 
 def mm1_model(lam, mu):
     rho = lam / mu
