@@ -153,7 +153,7 @@ if __name__ == '__main__':
             # Ejecutar la simulación
             wait_times, system_times, utilization = simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers)
 
-        elif (entrada() == 2):
+        elif (entrada == 2):
             num = 1
             K = 10000
             results_mm1k, pn_dict = mm1k_model(lambda_rate, mu_rate, K)
