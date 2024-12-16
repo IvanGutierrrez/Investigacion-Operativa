@@ -133,17 +133,17 @@ def simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers):
 
 if __name__ == '__main__':
 
-    lambda_rate = 4  # tasa de llegada
-    mu_rate = 5  # tasa de servicio
     num = 0 # para el bucle por si no introduce numero bien
-
     while num == 0:
 
         print("Que modelo usar: 1. M/M/1     2. M/M/1/K")
         entrada = int(input())
         if (entrada == 1):
+            with open('instancia1.txt', 'r') as file:
+                lines = file.readlines()
+                valores = list(map(float, lines[0].split())) # 0 landa, 1 mu
             num = 1
-            resultado_mm1 = mm1_model(lambda_rate, mu_rate)
+            resultado_mm1 = mm1_model(valores[0], valores[1])
             print("Resultados M/M/1:")
             for clave, valor in resultado_mm1.items():
                 print(f"{clave}: {valor:.4f}")
@@ -151,12 +151,14 @@ if __name__ == '__main__':
             num_customers = 10000
 
             # Ejecutar la simulación
-            wait_times, system_times, utilization = simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers)
+            wait_times, system_times, utilization = simulate_fifo_queue_MM1(valores[0], valores[1], num_customers)
 
         elif (entrada == 2):
+            with open('instancia2.txt', 'r') as file:
+                lines = file.readlines()
+                valores = list(map(float, lines[0].split())) # 0 landa, 1 mu, 2 K
             num = 1
-            K = 10000
-            results_mm1k, pn_dict = mm1k_model(lambda_rate, mu_rate, K)
+            results_mm1k, pn_dict = mm1k_model(valores[0], valores[0], valores[2])
 
             print("\nResultados para el Modelo M/M/1/K:")
             for key, value in results_mm1k.items():
@@ -174,7 +176,7 @@ if __name__ == '__main__':
             num_customers = 10000
 
             # Ejecutar la simulación
-            wait_times, system_times, utilization = simulate_fifo_queue_MM1K(lambda_rate, mu_rate, num_customers, K)
+            wait_times, system_times, utilization = simulate_fifo_queue_MM1K(valores[0], valores[1], num_customers, valores[2])
 
 print(f"Tiempo de espera promedio en cola (FIFO): {np.mean(wait_times):.2f} horas")
 print(f"Tiempo promedio en el sistema (FIFO): {np.mean(system_times):.2f} horas")
