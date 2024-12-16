@@ -107,17 +107,10 @@ def simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers):
     service_times = np.random.exponential(1 / mu_rate, num_customers)
 
     # Inicializar variables
-    arrival_times = np.cumsum(inter_arrival_times) # array con tiempos acumulativos de tiempos de llegada
-
-    service_start_times = np.zeros(num_customers) # array de 0 para el inicio de tiempos de servicio
-    service_end_times = np.zeros(num_customers) # array de 0 para el fin de tiempos de servicio
-
-    people_queued = np.zeros(num_customers) # array de 0 para el numero de gente en cola
-    people_inSys = np.zeros(num_customers) # array de 0 para el numero de gente siendo atendida
-    peopleInQueue = list # guardar tiempos de fin de servicio para saber que gente esta dentro
-    peopleInShop = list
-
-    wait_times = np.zeros(num_customers) # array de 0 para los tiempos de espera de cada cliente
+    arrival_times = np.cumsum(inter_arrival_times)
+    service_start_times = np.zeros(num_customers)
+    service_end_times = np.zeros(num_customers)
+    wait_times = np.zeros(num_customers)
 
     # Simulación del sistema de colas
     for i in range(num_customers):
@@ -125,7 +118,6 @@ def simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers):
             service_start_times[i] = arrival_times[i]
         else:
             service_start_times[i] = max(arrival_times[i], service_end_times[i - 1])
-
         wait_times[i] = service_start_times[i] - arrival_times[i]
         service_end_times[i] = service_start_times[i] + service_times[i]
 
@@ -133,8 +125,8 @@ def simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers):
     system_times = service_end_times - arrival_times
 
     # Métricas
-    #average_wait = np.mean(wait_times)
-    #average_system_time = np.mean(system_times)
+    # average_wait = np.mean(wait_times)
+    # average_system_time = np.mean(system_times)
     server_utilization = np.sum(service_times) / service_end_times[-1]
 
     return wait_times, system_times, server_utilization
@@ -148,8 +140,8 @@ if __name__ == '__main__':
     while num == 0:
 
         print("Que modelo usar: 1. M/M/1     2. M/M/1/K")
-
-        if (input() == 1):
+        entrada = int(input())
+        if (entrada == 1):
             num = 1
             resultado_mm1 = mm1_model(lambda_rate, mu_rate)
             print("Resultados M/M/1:")
@@ -161,7 +153,7 @@ if __name__ == '__main__':
             # Ejecutar la simulación
             wait_times, system_times, utilization = simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers)
 
-        if (input() == 2):
+        elif (entrada() == 2):
             num = 1
             K = 10000
             results_mm1k, pn_dict = mm1k_model(lambda_rate, mu_rate, K)
@@ -178,11 +170,11 @@ if __name__ == '__main__':
             print("\nProbabilidades Pn (n = 0 a {0}):".format(K))
             for n, pn in pn_dict.items():
                print(f"P_{n}: {pn:.4f}")
-        # Parámetros
-        num_customers = 10000
+            # Parámetros
+            num_customers = 10000
 
-        # Ejecutar la simulación
-        wait_times, system_times, utilization = simulate_fifo_queue_MM1K(lambda_rate, mu_rate, num_customers, k)
+            # Ejecutar la simulación
+            wait_times, system_times, utilization = simulate_fifo_queue_MM1K(lambda_rate, mu_rate, num_customers, K)
 
 print(f"Tiempo de espera promedio en cola (FIFO): {np.mean(wait_times):.2f} horas")
 print(f"Tiempo promedio en el sistema (FIFO): {np.mean(system_times):.2f} horas")
