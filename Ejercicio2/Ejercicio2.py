@@ -65,43 +65,66 @@ def mm1k_model(lam, mu, K):
     }
     return results, pn_dict
 
-def simulate_fifo_queue_MM1K(lambda_rate, mu_rate, num_customers, k):
+def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priority_levels):
+
     # Generar tiempos entre llegadas y tiempos de servicio
     inter_arrival_times = np.random.exponential(1 / lambda_rate, num_customers)
     service_times = np.random.exponential(1 / mu_rate, num_customers)
+    priorities = np.random.choice(range(priority_levels), size=num_customers, p=[0.3, 0.7])
 
-    # Inicializar variables
-    arrival_times = np.cumsum(inter_arrival_times) # array con tiempos acumulativos de tiempos de llegada
+    # Calcular tiempos de llegada acumulativos
+    arrival_times = np.cumsum(inter_arrival_times)
 
-    service_start_times = np.zeros(num_customers) # array de 0 para el inicio de tiempos de servicio
-    service_end_times = np.zeros(num_customers) # array de 0 para el fin de tiempos de servicio
+    # Inicializar matrices para tiempos de servicio
+    service_start_times = np.zeros(num_customers)
+    service_end_times = np.zeros(num_customers)
+    wait_times = np.zeros(num_customers)
 
-    people_queued = np.zeros(num_customers) # array de 0 para el numero de gente en cola
-    people_inSys = np.zeros(num_customers) # array de 0 para el numero de gente siendo atendida
-    peopleInQueue = list # guardar tiempos de fin de servicio para saber que gente esta dentro
-    peopleInShop = list
+    # Inicializar colas para cada nivel de prioridad
+    queues = [deque() for _ in range(priority_levels)]
 
-    wait_times = np.zeros(num_customers) # array de 0 para los tiempos de espera de cada cliente
+    # Inicializar tiempo de disponibilidad del servidor
+    server_free_time = 0
 
-    # Simulación del sistema de colas
-    for i in range(num_customers):
-        if i == 0:
-            service_start_times[i] = arrival_times[i]
+    # Inicializar índice de llegada
+    i = 0
+
+    while i < num_customers or any(queues[p] for p in range(priority_levels)):
+        if i < num_customers and arrival_times[i] <= server_free_time:
+            # Añadir cliente a la cola correspondiente
+            queues[priorities[i]].append(i)
+            i += 1
         else:
-            service_start_times[i] = max(arrival_times[i], service_end_times[i - 1])
+            if any(queues[p] for p in range(priority_levels)):
+                # Encontrar la cola con la más alta prioridad disponible
+                for p in range(priority_levels):
+                    if queues[p]:
+                        next_customer = queues[p].popleft()
+                        break
 
-        wait_times[i] = service_start_times[i] - arrival_times[i]
-        service_end_times[i] = service_start_times[i] + service_times[i]
+                # Asignar tiempos de servicio
+                service_start_times[next_customer] = max(arrival_times[next_customer], server_free_time)
+                wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
+                service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
+
+                # Actualizar tiempo libre del servidor
+                server_free_time = service_end_times[next_customer]
+            else:
+                if i < num_customers:
+                    # Avanzar el tiempo al siguiente evento de llegada
+                    server_free_time = arrival_times[i]
+                else:
+                    break
 
     # Calcular tiempos en el sistema
     system_times = service_end_times - arrival_times
 
-    # Métricas
+    # Calcular métricas
     #average_wait = np.mean(wait_times)
     #average_system_time = np.mean(system_times)
-    server_utilization = np.sum(service_times) / service_end_times[-1]
+    server_utilization = np.sum(service_times) / service_end_times[-1] if service_end_times[-1] > 0 else 0
 
-    return wait_times, system_times, server_utilization
+    return wait_times, system_times, priorities, server_utilization
 
 def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_levels):
 
@@ -202,14 +225,14 @@ if __name__ == '__main__':
                 else:
                     print(f"{key}: {value:.4f}")
 
-            print("\nProbabilidades Pn (n = 0 a {0}):".format(K))
+            print("\nProbabilidades Pn (n = 0 a {0}):".format(valores[2]))
             for n, pn in pn_dict.items():
                print(f"P_{n}: {pn:.4f}")
             # Parámetros
-            #num_customers = 10000
-
+            num_customers = 10000
+            priority_levels = 2  # 0 - Alta, 1 - Baja
             # Ejecutar la simulación
-            #wait_times, system_times, utilization = simulate_fifo_queue_MM1K(valores[0], valores[1], num_customers, valores[2])
+            wait_times, system_times, priorities, utilization = simulate_priority_queue_MM1K(valores[0], valores[1], num_customers, valores[2], priority_levels)
 
 # Separar métricas por prioridad
 high_priority_indices = np.where(priorities == 0)[0]
