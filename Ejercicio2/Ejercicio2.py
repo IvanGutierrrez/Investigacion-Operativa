@@ -1,7 +1,10 @@
+import queue
 from collections import deque
 
 import numpy as np
 import matplotlib.pyplot as plt
+from fontTools.merge.util import first
+
 
 def mm1_model(lam, mu):
     rho = lam / mu
@@ -79,21 +82,26 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
     service_start_times = np.zeros(num_customers)
     service_end_times = np.zeros(num_customers)
     wait_times = np.zeros(num_customers)
+    people_in_shop = deque()
 
     # Inicializar colas para cada nivel de prioridad
     queues = [deque() for _ in range(priority_levels)]
 
     # Inicializar tiempo de disponibilidad del servidor
-    server_free_time = 0
+    actualTime = 0
 
     # Inicializar índice de llegada
     i = 0
 
     while i < num_customers or any(queues[p] for p in range(priority_levels)):
-        if i < num_customers and arrival_times[i] <= server_free_time:
+
+        #RELLENAR COLA
+        if i < num_customers and arrival_times[i] <= actualTime:
             # Añadir cliente a la cola correspondiente
             queues[priorities[i]].append(i)
             i += 1
+
+        #VACIAR COLA
         else:
             if any(queues[p] for p in range(priority_levels)):
                 # Encontrar la cola con la más alta prioridad disponible
@@ -102,17 +110,23 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
                         next_customer = queues[p].popleft()
                         break
 
-                # Asignar tiempos de servicio
-                service_start_times[next_customer] = max(arrival_times[next_customer], server_free_time)
-                wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
-                service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
+                if len(people_in_shop) < K:
+                    # Asignar tiempos de servicio
+                    service_start_times[next_customer] = max(arrival_times[next_customer], actualTime)
+                    wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
+                    service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
+                    people_in_shop.append(service_end_times[next_customer])
+
 
                 # Actualizar tiempo libre del servidor
-                server_free_time = service_end_times[next_customer]
+                actualTime = service_end_times[next_customer]
+                # Quitar todos los clientes ya atendidos en el momento actual
+                while (first(people_in_shop) < actualTime) and len(people_in_shop) > 0:
+                    people_in_shop.popleft()
             else:
                 if i < num_customers:
                     # Avanzar el tiempo al siguiente evento de llegada
-                    server_free_time = arrival_times[i]
+                    actualTime = arrival_times[i]
                 else:
                     break
 
@@ -197,7 +211,7 @@ if __name__ == '__main__':
         if (entrada == 1):
             with open('instancia1.txt', 'r') as file:
                 lines = file.readlines()
-                valores = list(map(float, lines[0].split())) # 0 landa, 1 mu
+                valores = list(map(int, lines[0].split())) # 0 landa, 1 mu
             num = 1
             resultado_mm1 = mm1_model(valores[0], valores[1])
             print("Resultados M/M/1:")
@@ -212,7 +226,7 @@ if __name__ == '__main__':
         elif (entrada == 2):
             with open('instancia2.txt', 'r') as file:
                 lines = file.readlines()
-                valores = list(map(float, lines[0].split())) # 0 landa, 1 mu, 2 K
+                valores = list(map(int, lines[0].split())) # 0 landa, 1 mu, 2 K
             num = 1
             results_mm1k, pn_dict = mm1k_model(valores[0], valores[0], valores[2])
 
