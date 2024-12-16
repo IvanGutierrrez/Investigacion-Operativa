@@ -1,3 +1,5 @@
+from collections import deque
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -101,35 +103,66 @@ def simulate_fifo_queue_MM1K(lambda_rate, mu_rate, num_customers, k):
 
     return wait_times, system_times, server_utilization
 
-def simulate_fifo_queue_MM1(lambda_rate, mu_rate, num_customers):
+def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_levels):
+
     # Generar tiempos entre llegadas y tiempos de servicio
     inter_arrival_times = np.random.exponential(1 / lambda_rate, num_customers)
     service_times = np.random.exponential(1 / mu_rate, num_customers)
+    priorities = np.random.choice(range(priority_levels), size=num_customers, p=[0.3, 0.7])
 
-    # Inicializar variables
+    # Calcular tiempos de llegada acumulativos
     arrival_times = np.cumsum(inter_arrival_times)
+
+    # Inicializar matrices para tiempos de servicio
     service_start_times = np.zeros(num_customers)
     service_end_times = np.zeros(num_customers)
     wait_times = np.zeros(num_customers)
 
-    # Simulación del sistema de colas
-    for i in range(num_customers):
-        if i == 0:
-            service_start_times[i] = arrival_times[i]
+    # Inicializar colas para cada nivel de prioridad
+    queues = [deque() for _ in range(priority_levels)]
+
+    # Inicializar tiempo de disponibilidad del servidor
+    server_free_time = 0
+
+    # Inicializar índice de llegada
+    i = 0
+
+    while i < num_customers or any(queues[p] for p in range(priority_levels)):
+        if i < num_customers and arrival_times[i] <= server_free_time:
+            # Añadir cliente a la cola correspondiente
+            queues[priorities[i]].append(i)
+            i += 1
         else:
-            service_start_times[i] = max(arrival_times[i], service_end_times[i - 1])
-        wait_times[i] = service_start_times[i] - arrival_times[i]
-        service_end_times[i] = service_start_times[i] + service_times[i]
+            if any(queues[p] for p in range(priority_levels)):
+                # Encontrar la cola con la más alta prioridad disponible
+                for p in range(priority_levels):
+                    if queues[p]:
+                        next_customer = queues[p].popleft()
+                        break
+
+                # Asignar tiempos de servicio
+                service_start_times[next_customer] = max(arrival_times[next_customer], server_free_time)
+                wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
+                service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
+
+                # Actualizar tiempo libre del servidor
+                server_free_time = service_end_times[next_customer]
+            else:
+                if i < num_customers:
+                    # Avanzar el tiempo al siguiente evento de llegada
+                    server_free_time = arrival_times[i]
+                else:
+                    break
 
     # Calcular tiempos en el sistema
     system_times = service_end_times - arrival_times
 
-    # Métricas
-    # average_wait = np.mean(wait_times)
-    # average_system_time = np.mean(system_times)
-    server_utilization = np.sum(service_times) / service_end_times[-1]
+    # Calcular métricas
+    #average_wait = np.mean(wait_times)
+    #average_system_time = np.mean(system_times)
+    server_utilization = np.sum(service_times) / service_end_times[-1] if service_end_times[-1] > 0 else 0
 
-    return wait_times, system_times, server_utilization
+    return wait_times, system_times, priorities, server_utilization
 
 if __name__ == '__main__':
 
@@ -149,9 +182,9 @@ if __name__ == '__main__':
                 print(f"{clave}: {valor:.4f}")
             # Parámetros
             num_customers = 10000
-
+            priority_levels = 2  # 0 - Alta, 1 - Baja
             # Ejecutar la simulación
-            wait_times, system_times, utilization = simulate_fifo_queue_MM1(valores[0], valores[1], num_customers)
+            wait_times, system_times, priorities, utilization = simulate_priority_queue_MM1(valores[0], valores[1], num_customers, priority_levels)
 
         elif (entrada == 2):
             with open('instancia2.txt', 'r') as file:
@@ -173,29 +206,53 @@ if __name__ == '__main__':
             for n, pn in pn_dict.items():
                print(f"P_{n}: {pn:.4f}")
             # Parámetros
-            num_customers = 10000
+            #num_customers = 10000
 
             # Ejecutar la simulación
-            wait_times, system_times, utilization = simulate_fifo_queue_MM1K(valores[0], valores[1], num_customers, valores[2])
+            #wait_times, system_times, utilization = simulate_fifo_queue_MM1K(valores[0], valores[1], num_customers, valores[2])
 
-print(f"Tiempo de espera promedio en cola (FIFO): {np.mean(wait_times):.2f} horas")
-print(f"Tiempo promedio en el sistema (FIFO): {np.mean(system_times):.2f} horas")
-print(f"Utilización del servidor (FIFO): {utilization:.2%}")
+# Separar métricas por prioridad
+high_priority_indices = np.where(priorities == 0)[0]
+low_priority_indices = np.where(priorities == 1)[0]
+
+wait_times_high = wait_times[high_priority_indices]
+system_times_high = system_times[high_priority_indices]
+
+wait_times_low = wait_times[low_priority_indices]
+system_times_low = system_times[low_priority_indices]
+
+# Imprimir métricas generales
+print(f"Tiempo de espera promedio en cola (General): {np.mean(wait_times):.2f} horas")
+print(f"Tiempo promedio en el sistema (General): {np.mean(system_times):.2f} horas")
+print(f"Utilización del servidor: {utilization:.2%}\n")
+
+# Imprimir métricas por prioridad
+print(f"--- Métricas para Prioridad Alta (0) ---")
+print(f"Tiempo de espera promedio en cola (Alta): {np.mean(wait_times_high):.2f} horas")
+print(f"Tiempo promedio en el sistema (Alta): {np.mean(system_times_high):.2f} horas\n")
+
+print(f"--- Métricas para Prioridad Baja (1) ---")
+print(f"Tiempo de espera promedio en cola (Baja): {np.mean(wait_times_low):.2f} horas")
+print(f"Tiempo promedio en el sistema (Baja): {np.mean(system_times_low):.2f} horas\n")
 
 # Visualizar la distribución de tiempos de espera
-plt.figure(figsize=(10, 6))
-plt.hist(wait_times, bins=50, density=True, edgecolor='black', alpha=0.7)
-plt.title('Distribución de tiempos de espera en cola (FIFO)')
+plt.figure(figsize=(12, 8))
+plt.hist(wait_times_high, bins=50, density=True, edgecolor='black', alpha=0.7, label='Prioridad Alta')
+plt.hist(wait_times_low, bins=50, density=True, edgecolor='black', alpha=0.5, label='Prioridad Baja')
+plt.title('Distribución de tiempos de espera en cola por prioridad')
 plt.xlabel('Tiempo de espera (horas)')
 plt.ylabel('Densidad de probabilidad')
+plt.legend()
 plt.grid(True)
 plt.show()
 
 # Visualizar la distribución de tiempos en el sistema
-plt.figure(figsize=(10, 6))
-plt.hist(system_times, bins=50, density=True, edgecolor='black', alpha=0.7)
-plt.title('Distribución de tiempos en el sistema (FIFO)')
+plt.figure(figsize=(12, 8))
+plt.hist(system_times_high, bins=50, density=True, edgecolor='black', alpha=0.7, label='Prioridad Alta')
+plt.hist(system_times_low, bins=50, density=True, edgecolor='black', alpha=0.5, label='Prioridad Baja')
+plt.title('Distribución de tiempos en el sistema por prioridad')
 plt.xlabel('Tiempo en el sistema (horas)')
 plt.ylabel('Densidad de probabilidad')
+plt.legend()
 plt.grid(True)
 plt.show()
