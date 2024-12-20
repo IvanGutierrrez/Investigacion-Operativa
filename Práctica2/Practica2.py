@@ -20,11 +20,12 @@ def move_nodes(matrizLlegadas, actualTime, matrizSalidas, listaEstados, matrizTi
     while not seAcabo:
         for i in range(len(listaEstados)):
             if listaEstados[i] != -1:
-                usuarioActual = listaEstados[i] #indice del nodo en el que estamos
-                matrizSalidas[i][usuarioActual] = matrizTiempos[i][usuarioActual] + matrizLlegadas[i][usuarioActual]
+                usuarioActual = listaEstados[i] #indice del nodo en el que estamos            
                 nodo_seleccionado = random.choice(len(listaNodos), weights= probs[i], k=1)[0]
-                        if i != nodo_seleccionado:
-                            listaNodos[nodo_seleccionado].append()
+                listaEstados[i] = -1
+                if nodo_seleccionado != i:
+                    
+                    
 
 
 
@@ -79,6 +80,7 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
                 service_start_times[0][next_customer] = max(arrival_times[next_customer], actualTime)
                 wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
                 estadoNodos[0] = next_customer
+                service_end_times[0][next_customer] = service_start_times[0][next_customer] + wait_times[next_customer]
 
                 move_nodes(service_start_times, actualTime, service_end_times,estado_nodos, service_times)
 
