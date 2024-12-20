@@ -96,7 +96,7 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
     while i < num_customers or any(queues[p] for p in range(priority_levels)):
 
         #RELLENAR COLA
-        if i < num_customers and arrival_times[i] <= actualTime:
+        if i < num_customers and arrival_times[i] <= actualTime and i<K:
             # Añadir cliente a la cola correspondiente
             queues[priorities[i]].append(i)
             i += 1

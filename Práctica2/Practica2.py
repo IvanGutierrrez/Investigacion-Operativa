@@ -1,4 +1,3 @@
-
 import queue
 from collections import deque
 import numpy as np
@@ -6,7 +5,7 @@ import matplotlib.pyplot as plt
 from PIL.ImagePalette import random
 from fontTools.merge.util import first
 
-def move_nodes(listaNodos, actualTime):
+def move_nodes(matrizLlegadas, actualTime, matrizSalidas, listaEstados, matrizTiempos):
     probs = [
         [0.1, 0.2, 0.4, 0.1, 0.2],
         [0.1, 0.2, 0.4, 0.1, 0.2],
@@ -19,12 +18,13 @@ def move_nodes(listaNodos, actualTime):
     seAcabo = False
 
     while not seAcabo:
-        for i in range(len(listaNodos)):
-            for j in listaNodos[i]:
-                if j < actualTime: #si aun no le toca salir del nodo
-                    nodo_seleccionado = random.choice(len(listaNodos), weights= probs[i], k=1)[0]
-                    if i != nodo_seleccionado:
-                        listaNodos[nodo_seleccionado].append()
+        for i in range(len(listaEstados)):
+            if listaEstados[i] != -1:
+                usuarioActual = listaEstados[i] #indice del nodo en el que estamos
+                matrizSalidas[i][usuarioActual] = matrizTiempos[i][usuarioActual] + matrizLlegadas[i][usuarioActual]
+                nodo_seleccionado = random.choice(len(listaNodos), weights= probs[i], k=1)[0]
+                        if i != nodo_seleccionado:
+                            listaNodos[nodo_seleccionado].append()
 
 
 
@@ -33,16 +33,19 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
 
     # Generar tiempos entre llegadas y tiempos de servicio
     inter_arrival_times = np.random.exponential(1 / lambda_rate, num_customers)
-    service_times = np.random.exponential(1 / mu_rate, num_customers)
+    service_times = [[],[],[],[],[]]
+    for i in range(5):
+        service_times[i] = np.random.exponential(1 / mu_rate[i], num_customers)
     priorities = np.random.choice(range(priority_levels), size=num_customers, p=[0.3, 0.7])
 
     # Calcular tiempos de llegada acumulativos
     arrival_times = np.cumsum(inter_arrival_times)
 
     # Inicializar matrices para tiempos de servicio
-    service_start_times = np.zeros(num_customers)
-    service_end_times = np.zeros(num_customers)
+    service_start_times = [np.zeros(num_customers),np.zeros(num_customers),np.zeros(num_customers),np.zeros(num_customers),np.zeros(num_customers)]
+    service_end_times = [np.zeros(num_customers),np.zeros(num_customers),np.zeros(num_customers),np.zeros(num_customers),np.zeros(num_customers)]
     wait_times = np.zeros(num_customers)
+
 
     instancias_cola = np.zeros(num_customers)
     people_in_queue = deque()
@@ -53,8 +56,8 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
     # Inicializar tiempo de disponibilidad del servidor
     server_free_time = 0
 
-    #Inicializar arrays para cada nodo con los tiempos de salida de las entidades
-    nodos = [[],[],[],[],[]]
+    #Estado de los nodos para ir metiendo
+    estadoNodos = [-1,-1,-1,-1,-1]
 
     # Inicializar índice de llegada
     i = 0
@@ -73,10 +76,12 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
                         break
 
                 # Asignar tiempos de servicio
-                service_start_times[next_customer] = max(arrival_times[next_customer], server_free_time)
+                service_start_times[0][next_customer] = max(arrival_times[next_customer], actualTime)
                 wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
-                service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
-                nodos[0].append(service_end_times[next_customer])
+                estadoNodos[0] = next_customer
+
+                move_nodes(service_start_times, actualTime, service_end_times,estado_nodos, service_times)
+
 
                 # rellenar instancias de cola para hacer la media para el numero promedio en cola
                 # para ello metemos a la gente en la cola si su hora de llegada es menor que el actual
@@ -91,7 +96,6 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
 
 
                 # Actualizar tiempo libre del servidor
-                move_nodes(nodos)
                 actualTime = service_end_times[next_customer]
             else:
                 if i < num_customers:
