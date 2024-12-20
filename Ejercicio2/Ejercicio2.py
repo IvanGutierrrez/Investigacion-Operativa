@@ -1,5 +1,6 @@
 import queue
 from collections import deque
+
 import numpy as np
 import matplotlib.pyplot as plt
 from fontTools.merge.util import first
@@ -83,9 +84,6 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
     wait_times = np.zeros(num_customers)
     people_in_shop = deque()
 
-    instancias_cola = np.zeros(num_customers)
-    people_in_queue = deque()
-
     # Inicializar colas para cada nivel de prioridad
     queues = [deque() for _ in range(priority_levels)]
 
@@ -119,18 +117,6 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
                     service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
                     people_in_shop.append(service_end_times[next_customer])
 
-                   #rellenar instancias de cola para hacer la media para el numero promedio en cola
-                   #para ello metemos a la gente en la cola si su hora de llegada es menor que el actual
-
-                    if arrival_times[next_customer] <= actualTime < service_end_times[next_customer]:
-                        people_in_queue.append(next_customer)
-                        instancias_cola[next_customer] = len(people_in_queue)
-
-                    # se quitan de la cola de la tienda si ya ha sido atendido
-                    while first(people_in_queue) >= actualTime:
-                        people_in_queue.popleft()
-
-
 
                 # Actualizar tiempo libre del servidor
                 actualTime = service_end_times[next_customer]
@@ -152,8 +138,7 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
     #average_system_time = np.mean(system_times)
     server_utilization = np.sum(service_times) / service_end_times[-1] if service_end_times[-1] > 0 else 0
 
-
-    return wait_times, system_times, priorities, server_utilization, instancias_cola
+    return wait_times, system_times, priorities, server_utilization
 
 def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_levels):
 
@@ -170,20 +155,17 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
     service_end_times = np.zeros(num_customers)
     wait_times = np.zeros(num_customers)
 
-    instancias_cola = np.zeros(num_customers)
-    people_in_queue = deque()
-
     # Inicializar colas para cada nivel de prioridad
     queues = [deque() for _ in range(priority_levels)]
 
     # Inicializar tiempo de disponibilidad del servidor
-    server_free_time = 0
+    actualTime = 0
 
     # Inicializar índice de llegada
     i = 0
 
     while i < num_customers or any(queues[p] for p in range(priority_levels)):
-        if i < num_customers and arrival_times[i] <= server_free_time:
+        if i < num_customers and arrival_times[i] <= actualTime:
             # Añadir cliente a la cola correspondiente
             queues[priorities[i]].append(i)
             i += 1
@@ -196,21 +178,9 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
                         break
 
                 # Asignar tiempos de servicio
-                service_start_times[next_customer] = max(arrival_times[next_customer], server_free_time)
+                service_start_times[next_customer] = max(arrival_times[next_customer], actualTime)
                 wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
                 service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
-
-                # rellenar instancias de cola para hacer la media para el numero promedio en cola
-                # para ello metemos a la gente en la cola si su hora de llegada es menor que el actual
-
-                if arrival_times[next_customer] <= actualTime < service_end_times[next_customer]:
-                    people_in_queue.append(next_customer)
-                    instancias_cola[next_customer] = len(people_in_queue)
-
-                # se quitan de la cola de la tienda si ya ha sido atendido
-                while first(people_in_queue) >= actualTime:
-                    people_in_queue.popleft()
-
 
                 # Actualizar tiempo libre del servidor
                 actualTime = service_end_times[next_customer]
@@ -229,9 +199,7 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
     #average_system_time = np.mean(system_times)
     server_utilization = np.sum(service_times) / service_end_times[-1] if service_end_times[-1] > 0 else 0
 
-
-
-    return wait_times, system_times, priorities, server_utilization, instancias_cola
+    return wait_times, system_times, priorities, server_utilization
 
 if __name__ == '__main__':
 
@@ -253,7 +221,7 @@ if __name__ == '__main__':
             num_customers = 10000
             priority_levels = 2  # 0 - Alta, 1 - Baja
             # Ejecutar la simulación
-            wait_times, system_times, priorities, utilization, promedioCola = simulate_priority_queue_MM1(valores[0], valores[1], num_customers, priority_levels)
+            wait_times, system_times, priorities, utilization = simulate_priority_queue_MM1(valores[0], valores[1], num_customers, priority_levels)
 
         elif (entrada == 2):
             with open('instancia2.txt', 'r') as file:
@@ -278,7 +246,7 @@ if __name__ == '__main__':
             num_customers = 10000
             priority_levels = 2  # 0 - Alta, 1 - Baja
             # Ejecutar la simulación
-            wait_times, system_times, priorities, utilization,promedioCola = simulate_priority_queue_MM1K(valores[0], valores[1], num_customers, valores[2], priority_levels)
+            wait_times, system_times, priorities, utilization = simulate_priority_queue_MM1K(valores[0], valores[1], num_customers, valores[2], priority_levels)
 
 # Separar métricas por prioridad
 high_priority_indices = np.where(priorities == 0)[0]
@@ -286,28 +254,23 @@ low_priority_indices = np.where(priorities == 1)[0]
 
 wait_times_high = wait_times[high_priority_indices]
 system_times_high = system_times[high_priority_indices]
-people_inQueue_high = promedioCola[high_priority_indices]
 
 wait_times_low = wait_times[low_priority_indices]
 system_times_low = system_times[low_priority_indices]
-people_inQueue_low = promedioCola[low_priority_indices]
 
 # Imprimir métricas generales
 print(f"Tiempo de espera promedio en cola (General): {np.mean(wait_times):.2f} horas")
 print(f"Tiempo promedio en el sistema (General): {np.mean(system_times):.2f} horas")
-print(f"Numero promedio en la cola (General): {np.mean(promedioCola):} \n")
 print(f"Utilización del servidor: {utilization:.2%}\n")
 
 # Imprimir métricas por prioridad
 print(f"--- Métricas para Prioridad Alta (0) ---")
 print(f"Tiempo de espera promedio en cola (Alta): {np.mean(wait_times_high):.2f} horas")
-print(f"Tiempo promedio en el sistema (Alta): {np.mean(system_times_high):.2f} horas")
-print(f"Numero promedio en la cola (Alta): {np.mean(people_inQueue_high):} \n")
+print(f"Tiempo promedio en el sistema (Alta): {np.mean(system_times_high):.2f} horas\n")
 
 print(f"--- Métricas para Prioridad Baja (1) ---")
 print(f"Tiempo de espera promedio en cola (Baja): {np.mean(wait_times_low):.2f} horas")
-print(f"Tiempo promedio en el sistema (Baja): {np.mean(system_times_low):.2f} horas")
-print(f"Numero promedio en la cola (Baja): {np.mean(people_inQueue_low):}\n")
+print(f"Tiempo promedio en el sistema (Baja): {np.mean(system_times_low):.2f} horas\n")
 
 # Visualizar la distribución de tiempos de espera
 plt.figure(figsize=(12, 8))
