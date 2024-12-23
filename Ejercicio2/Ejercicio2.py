@@ -98,7 +98,8 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
         #RELLENAR COLA
         if i < num_customers and arrival_times[i] <= actualTime and i<K:
             # Añadir cliente a la cola correspondiente
-            queues[priorities[i]].append(i)
+            if len(queues[priorities[i]]) < K: #Si no hay espacio en la cola no se atiende
+                queues[priorities[i]].append(i)
             i += 1
 
         #VACIAR COLA
@@ -110,19 +111,15 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
                         next_customer = queues[p].popleft()
                         break
 
-                if len(people_in_shop) < K:
-                    # Asignar tiempos de servicio
-                    service_start_times[next_customer] = max(arrival_times[next_customer], actualTime)
-                    wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
-                    service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
-                    people_in_shop.append(service_end_times[next_customer])
+                # Asignar tiempos de servicio
+                service_start_times[next_customer] = max(arrival_times[next_customer], actualTime)
+                wait_times[next_customer] = service_start_times[next_customer] - arrival_times[next_customer]
+                service_end_times[next_customer] = service_start_times[next_customer] + service_times[next_customer]
+                people_in_shop.append(service_end_times[next_customer])
 
 
                 # Actualizar tiempo libre del servidor
                 actualTime = service_end_times[next_customer]
-                # Quitar todos los clientes ya atendidos en el momento actual
-                while (first(people_in_shop) < actualTime) and len(people_in_shop) > 0:
-                    people_in_shop.popleft()
             else:
                 if i < num_customers:
                     # Avanzar el tiempo al siguiente evento de llegada
