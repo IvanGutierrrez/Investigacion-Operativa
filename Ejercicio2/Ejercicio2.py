@@ -315,22 +315,25 @@ system_times_high = filtered_system_times[high_priority_indices]
 wait_times_low = filtered_wait_times[low_priority_indices]
 system_times_low = filtered_system_times[low_priority_indices]
 
+promedioCola = np.array(promedioColaAlta) + np.array(promedioColaBaja)
+
 # Imprimir métricas generales
 print("\nValores experimentales\n")
 print(f"Tiempo de espera promedio en cola (General): {np.mean(filtered_wait_times):.2f} horas")
 print(f"Tiempo promedio en el sistema (General): {np.mean(filtered_system_times):.2f} horas")
+print(f"Número promedio en la cola (General): {np.mean(promedioCola):.2f}")
 print(f"Utilización del servidor: {utilization:.2%}\n")
 
 # Imprimir métricas por prioridad
 print(f"--- Métricas para Prioridad Alta (0) ---")
 print(f"Tiempo de espera promedio en cola (Alta): {np.mean(wait_times_high):.2f} horas")
 print(f"Tiempo promedio en el sistema (Alta): {np.mean(system_times_high):.2f} horas")
-print(f"Número promedio en la cola (Alta): {np.mean(promedioColaAlta):.0f} \n")
+print(f"Número promedio en la cola (Alta): {np.mean(promedioColaAlta):.2f} \n")
 
 print(f"--- Métricas para Prioridad Baja (1) ---")
 print(f"Tiempo de espera promedio en cola (Baja): {np.mean(wait_times_low):.2f} horas")
 print(f"Tiempo promedio en el sistema (Baja): {np.mean(system_times_low):.2f} horas")
-print(f"Número promedio en la cola (Baja): {np.mean(promedioColaBaja):.0f}\n")
+print(f"Número promedio en la cola (Baja): {np.mean(promedioColaBaja):.2f}\n")
 
 # Visualizar la distribución de tiempos de espera
 plt.figure(figsize=(12, 8))
