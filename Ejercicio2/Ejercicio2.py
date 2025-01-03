@@ -69,20 +69,15 @@ def mm1k_model(lam, mu, K):
     return results, pn_dict
 
 def calcularClientes(arrival_times,service_end_times,actualTime,priorities):
-    valid_indices = np.where(arrival_times >= 0)[0]
-    filtered_priorities = priorities[valid_indices]
-    filtered_service_end_times = service_end_times[valid_indices]
-    filtered_arrival_times = arrival_times[valid_indices]
+    # Separar métricas por prioridad
+    high_priority_indices = np.where(priorities == 0)[0]
+    low_priority_indices = np.where(priorities == 1)[0]
 
-    # Separar métricas por prioridad (usando los índices válidos)
-    high_priority_indices = np.where(filtered_priorities == 0)[0]
-    low_priority_indices = np.where(filtered_priorities == 1)[0]
+    service_end_times_high = service_end_times[high_priority_indices]
+    arrival_times_high = arrival_times[high_priority_indices]
 
-    service_end_times_high = filtered_service_end_times[high_priority_indices]
-    arrival_times_high = filtered_arrival_times[high_priority_indices]
-
-    service_end_times_low = filtered_service_end_times[low_priority_indices]
-    arrival_times_low = filtered_arrival_times[low_priority_indices]
+    service_end_times_low = service_end_times[low_priority_indices]
+    arrival_times_low = arrival_times[low_priority_indices]
 
     sum = [0, 0]
     i = 0 #El último cliente terminado
@@ -141,14 +136,16 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
             sum = calcularClientes(arrival_times,service_end_times,actualTime,priorities)
             if sum[0] + sum[1] <= K: #Si hay espacio en el sistema
                 queues[priorities[i]].append(i)
+                i += 1
             else:
                 # Asignar tiempos de servicio negativos, ya que no se atiende
-                service_start_times[i] = -1
-                wait_times[i] = -1
-                service_end_times[i] = -1
-                arrival_times[i] = -1
-                service_times[i] = -1
-            i += 1
+                service_start_times = np.delete(service_start_times, i)
+                wait_times = np.delete(wait_times, i)
+                service_end_times = np.delete(service_end_times, i)
+                arrival_times = np.delete(arrival_times, i)
+                service_times = np.delete(service_times, i)
+                priorities = np.delete(priorities, i)
+                num_customers -= 1
 
         #VACIAR COLA
         else:
@@ -300,27 +297,22 @@ if __name__ == '__main__':
             # Ejecutar la simulación
             wait_times, system_times, priorities, utilization, promedioColaBaja, promedioColaAlta = simulate_priority_queue_MM1K(valores[0], valores[1], valores[2], valores[4], valores[3])
 
-valid_indices = np.where(system_times >= 0)[0]
-filtered_priorities = priorities[valid_indices]
-filtered_wait_times = wait_times[valid_indices]
-filtered_system_times = system_times[valid_indices]
+# Separar métricas por prioridad
+high_priority_indices = np.where(priorities == 0)[0]
+low_priority_indices = np.where(priorities == 1)[0]
 
-# Separar métricas por prioridad (usando los índices válidos)
-high_priority_indices = np.where(filtered_priorities == 0)[0]
-low_priority_indices = np.where(filtered_priorities == 1)[0]
+wait_times_high = wait_times[high_priority_indices]
+system_times_high = system_times[high_priority_indices]
 
-wait_times_high = filtered_wait_times[high_priority_indices]
-system_times_high = filtered_system_times[high_priority_indices]
-
-wait_times_low = filtered_wait_times[low_priority_indices]
-system_times_low = filtered_system_times[low_priority_indices]
+wait_times_low = wait_times[low_priority_indices]
+system_times_low = system_times[low_priority_indices]
 
 promedioCola = np.array(promedioColaAlta) + np.array(promedioColaBaja)
 
 # Imprimir métricas generales
 print("\nValores experimentales\n")
-print(f"Tiempo de espera promedio en cola (General): {np.mean(filtered_wait_times):.2f} horas")
-print(f"Tiempo promedio en el sistema (General): {np.mean(filtered_system_times):.2f} horas")
+print(f"Tiempo de espera promedio en cola (General): {np.mean(wait_times):.2f} horas")
+print(f"Tiempo promedio en el sistema (General): {np.mean(system_times):.2f} horas")
 print(f"Número promedio en la cola (General): {np.mean(promedioCola):.2f}")
 print(f"Utilización del servidor: {utilization:.2%}\n")
 
