@@ -388,7 +388,6 @@ if __name__ == '__main__':
             wait_times, system_times, priorities, utilization, promedioColaBaja, promedioColaAlta, abandonadosPorBloqueo, abandonados = simulate_priority_queue_MM1K(
                 landa, mu, num_customers, priority_levels, probs, k, maxTime)
             abandonados += abandonadosPorBloqueo
-            print(f"Probabilidad de bloqueo: {abandonadosPorBloqueo/num_customers*100:2f}%")
         # Separar métricas por prioridad
         high_priority_indices = np.where(priorities == 0)[0]
         low_priority_indices = np.where(priorities == 1)[0]
@@ -414,7 +413,9 @@ if __name__ == '__main__':
         print(f"Número promedio en la cola (General): {(np.mean(filtered_T_cola_baja)+np.mean(filtered_T_cola_alta))/2:.0f} \n")
         for i in range(5):
             print(f"Utilización del servidor en el nodo {i}: {utilization[i]:.2%}\n", end= '')
-        print(f"Tasa de abandono: {abandonados / num_customers:2f}")
+        print(f"Tasa de abandono: {abandonados / num_customers:.4f}")
+        if entrada == 2:
+            print(f"Probabilidad de bloqueo: {abandonadosPorBloqueo / num_customers * 100:.4f}%")
         print()
 
         # Imprimir métricas por prioridad
