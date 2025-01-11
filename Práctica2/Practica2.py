@@ -228,7 +228,7 @@ def calcularClientes(arrival_times,service_end_times,actualTime,priorities,estad
     arrival_times_low = arrival_times[low_priority_indices]
 
     filtered_service_end_times_high = [
-        [t for t in service_end_times_high if t > 0] # Lista con clientes abandonados eliminados
+        [t for t in service_end_times_high if t > 0]
     ]
     filtered_arrival_times_high = [
         [t for t in arrival_times_high if t > 0]
@@ -242,7 +242,7 @@ def calcularClientes(arrival_times,service_end_times,actualTime,priorities,estad
 
     sum = [0, 0, 0]
     i = 0 #El último cliente terminado
-    while i < len(filtered_service_end_times_high) and service_end_times_high[i] != 0:
+    while i < len(filtered_service_end_times_high) and filtered_service_end_times_high[i] != 0:
         i += 1
     if i < len(filtered_service_end_times_high):
         for j in range(i,len(filtered_arrival_times_high)):
@@ -413,7 +413,6 @@ if __name__ == '__main__':
                 maxTime = float(lines[7])
             num = 1
             #Datos teóricos
-            # Datos del sistema
             # Cálculo de las utilizaciones
             rho = [landa/mu[i] for i in range(5)]
             # Cálculo de medidas para cada departamento
@@ -526,8 +525,8 @@ if __name__ == '__main__':
 
         # Visualizar la distribución de tiempos de espera
         plt.figure(figsize=(12, 8))
-        plt.hist(wait_times_high, bins=50, density=True, edgecolor='black', alpha=0.7, label='Prioridad Alta')
-        plt.hist(wait_times_low, bins=50, density=True, edgecolor='black', alpha=0.5, label='Prioridad Baja')
+        plt.hist(filtered_wait_times_high, bins=50, density=True, edgecolor='black', alpha=0.7, label='Prioridad Alta')
+        plt.hist(filtered_wait_times_low, bins=50, density=True, edgecolor='black', alpha=0.5, label='Prioridad Baja')
         plt.title('Distribución de tiempos de espera en cola por prioridad')
         plt.xlabel('Tiempo de espera (horas)')
         plt.ylabel('Densidad de probabilidad')
@@ -537,8 +536,8 @@ if __name__ == '__main__':
 
         # Visualizar la distribución de tiempos en el sistema
         plt.figure(figsize=(12, 8))
-        plt.hist(system_times_high, bins=50, density=True, edgecolor='black', alpha=0.7, label='Prioridad Alta')
-        plt.hist(system_times_low, bins=50, density=True, edgecolor='black', alpha=0.5, label='Prioridad Baja')
+        plt.hist(filtered_system_times_high, bins=50, density=True, edgecolor='black', alpha=0.7, label='Prioridad Alta')
+        plt.hist(filtered_system_times_low, bins=50, density=True, edgecolor='black', alpha=0.5, label='Prioridad Baja')
         plt.title('Distribución de tiempos en el sistema por prioridad')
         plt.xlabel('Tiempo en el sistema (horas)')
         plt.ylabel('Densidad de probabilidad')
