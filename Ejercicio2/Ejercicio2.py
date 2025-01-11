@@ -1,9 +1,6 @@
-import queue
 from collections import deque
-
 import numpy as np
 import matplotlib.pyplot as plt
-from fontTools.merge.util import first
 
 
 def mm1_model(lam, mu):
@@ -82,12 +79,12 @@ def calcularClientes(arrival_times,service_end_times,actualTime,priorities):
     sum = [0, 0]
     i = 0 #El último cliente terminado
     while i < len(service_end_times_high) and service_end_times_high[i] != 0:
-        i += 1 # Se suma 1 haste encontrar un cliente no atendido (si no tiene tiempo de fin de servicio es que no se le ha atendido)
-    if i < len(service_end_times_high): 
-        for j in range(i,len(arrival_times_high)):   # Desde ese cliente no atendido hasta el final de la lista....
-            if 0 < arrival_times_high[j] <= actualTime: # Si ha llegado antes de la hora actual se suma 1 al contador
+        i += 1
+    if i < len(service_end_times_high):
+        for j in range(i,len(arrival_times_high)):
+            if 0 < arrival_times_high[j] <= actualTime:
                 sum[0] += 1
-            else: # Si no, se para porque significa que tanto este como el resto, llegan despues del momento actual
+            else:
                 break
     i = 0  # El último cliente terminado
     while i < len(service_end_times_low) and service_end_times_low[i] != 0:
@@ -182,8 +179,6 @@ def simulate_priority_queue_MM1K(lambda_rate, mu_rate, num_customers, K, priorit
     system_times = np.array(filtered_service_end) - np.array(filtered_arrival)
 
     # Calcular métricas
-    #average_wait = np.mean(wait_times)
-    #average_system_time = np.mean(system_times)
     server_utilization = np.sum(filtered_service) / filtered_service_end[-1] if len(filtered_service_end) > 0 else 0
 
     return wait_times, system_times, priorities, server_utilization, instancias_cola_baja, instancias_cola_alta
@@ -250,8 +245,6 @@ def simulate_priority_queue_MM1(lambda_rate, mu_rate, num_customers, priority_le
     system_times = service_end_times - arrival_times
 
     # Calcular métricas
-    #average_wait = np.mean(wait_times)
-    #average_system_time = np.mean(system_times)
     server_utilization = np.sum(service_times) / service_end_times[-1] if service_end_times[-1] > 0 else 0
 
     return wait_times, system_times, priorities, server_utilization, instancias_cola_baja, instancias_cola_alta
