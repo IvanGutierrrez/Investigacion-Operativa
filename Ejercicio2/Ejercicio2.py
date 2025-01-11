@@ -83,11 +83,11 @@ def calcularClientes(arrival_times,service_end_times,actualTime,priorities):
     i = 0 #El último cliente terminado
     while i < len(service_end_times_high) and service_end_times_high[i] != 0:
         i += 1 # Se suma 1 haste encontrar un cliente no atendido (si no tiene tiempo de fin de servicio es que no se le ha atendido)
-    if i < len(service_end_times_high):
-        for j in range(i,len(arrival_times_high)):
-            if 0 < arrival_times_high[j] <= actualTime:
+    if i < len(service_end_times_high): 
+        for j in range(i,len(arrival_times_high)):   # Desde ese cliente no atendido hasta el final de la lista....
+            if 0 < arrival_times_high[j] <= actualTime: # Si ha llegado antes de la hora actual se suma 1 al contador
                 sum[0] += 1
-            else:
+            else: # Si no, se para porque significa que tanto este como el resto, llegan despues del momento actual
                 break
     i = 0  # El último cliente terminado
     while i < len(service_end_times_low) and service_end_times_low[i] != 0:
