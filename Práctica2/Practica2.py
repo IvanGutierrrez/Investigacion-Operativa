@@ -228,7 +228,7 @@ def calcularClientes(arrival_times,service_end_times,actualTime,priorities,estad
     arrival_times_low = arrival_times[low_priority_indices]
 
     filtered_service_end_times_high = [
-        [t for t in service_end_times_high if t > 0]
+        [t for t in service_end_times_high if t > 0] # Lista con clientes abandonados eliminados
     ]
     filtered_arrival_times_high = [
         [t for t in arrival_times_high if t > 0]
